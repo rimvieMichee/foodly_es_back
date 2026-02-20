@@ -47,4 +47,9 @@ export class CreateUserDto {
   @IsEnum(UserStatus)
   @IsOptional()
   status?: UserStatus;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  restaurantId?: string;
 }

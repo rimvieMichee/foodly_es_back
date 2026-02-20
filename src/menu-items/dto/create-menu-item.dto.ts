@@ -11,6 +11,11 @@ export class CreateMenuItemDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  restaurantId: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   name: string;
 
   @ApiProperty()

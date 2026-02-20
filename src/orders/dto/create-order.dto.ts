@@ -28,6 +28,11 @@ export class CreateOrderDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  restaurantId: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   tableId: string;
 
   @ApiProperty()

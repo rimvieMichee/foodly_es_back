@@ -11,6 +11,11 @@ export class CreateTableDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  restaurantId: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   number: string;
 
   @ApiProperty()
