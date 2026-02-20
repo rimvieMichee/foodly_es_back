@@ -8,10 +8,10 @@ export enum Category {
 }
 
 export class CreateMenuItemDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  @IsNotEmpty()
-  restaurantId: string;
+  @IsOptional()
+  restaurantId?: string;
 
   @ApiProperty()
   @IsString()

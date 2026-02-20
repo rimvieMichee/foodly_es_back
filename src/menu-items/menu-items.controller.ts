@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { MenuItemsService } from './menu-items.service';
 import { CreateMenuItemDto } from './dto/create-menu-item.dto';
@@ -14,8 +14,13 @@ export class MenuItemsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new menu item' })
-  create(@Body() createMenuItemDto: CreateMenuItemDto) {
-    return this.menuItemsService.create(createMenuItemDto);
+  create(@Body() createMenuItemDto: CreateMenuItemDto, @Request() req) {
+    // Ajouter automatiquement le restaurantId depuis le JWT
+    const restaurantId = req.user.restaurantId;
+    return this.menuItemsService.create({
+      ...createMenuItemDto,
+      restaurantId
+    });
   }
 
   @Get()
