@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { RestaurantsModule } from './restaurants/restaurants.module';
 import { MenuItemsModule } from './menu-items/menu-items.module';
 import { TablesModule } from './tables/tables.module';
 import { OrdersModule } from './orders/orders.module';
@@ -17,6 +18,7 @@ import { AppController } from './app.controller';
     PrismaModule,
     AuthModule,
     UsersModule,
+    RestaurantsModule,
     MenuItemsModule,
     TablesModule,
     OrdersModule,

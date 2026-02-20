@@ -8,19 +8,22 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  firstName String
-  lastName  String
-  phone     String
-  role      Role     @default(SERVER)
-  status    UserStatus @default(ACTIVE)
-  address   Address?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String      @id @default(uuid())
+  email        String      @unique
+  password     String
+  firstName    String
+  lastName     String
+  phone        String
+  role         Role        @default(SERVER)
+  status       UserStatus  @default(ACTIVE)
+  restaurantId String?
+  address      Address?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  lastLogin    DateTime?
   
-  orders    Order[]  @relation("ServerOrders")
+  restaurant Restaurant? @relation(fields: [restaurantId], references: [id])
+  orders     Order[]     @relation("ServerOrders")
   
   @@map("users")
 }
@@ -42,6 +45,26 @@ model Address {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("addresses")
+}
+
+model Restaurant {
+  id                  String             @id @default(uuid())
+  name                String
+  address             String
+  city                String
+  country             String
+  phone               String
+  email               String             @unique
+  logo                String?
+  status              RestaurantStatus   @default(ACTIVE)
+  subscriptionPlan    SubscriptionPlan   @default(FREE)
+  subscriptionEndDate DateTime
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  
+  users User[]
+  
+  @@map("restaurants")
 }
 
 model MenuItem {
@@ -118,6 +141,7 @@ model OrderItem {
 }
 
 enum Role {
+  TECHNICIAN
   ADMIN
   SERVER
   CLIENT
@@ -126,6 +150,19 @@ enum Role {
 enum UserStatus {
   ACTIVE
   INACTIVE
+}
+
+enum RestaurantStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PREMIUM
+  ENTERPRISE
 }
 
 enum Category {
