@@ -1,17 +1,63 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class RestaurantsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createRestaurantDto: CreateRestaurantDto) {
+    // Vérifier si l'email du restaurant ou de l'admin existe déjà
+    const existingRestaurant = await this.prisma.restaurant.findUnique({
+      where: { email: createRestaurantDto.email },
+    });
+
+    if (existingRestaurant) {
+      throw new ConflictException('Un restaurant avec cet email existe déjà');
+    }
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: createRestaurantDto.adminEmail },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Un utilisateur avec cet email existe déjà');
+    }
+
+    // Hasher le mot de passe de l'admin
+    const hashedPassword = await bcrypt.hash(createRestaurantDto.adminPassword, 10);
+
+    // Créer le restaurant et l'admin en une transaction
+    const { adminFirstName, adminLastName, adminEmail, adminPhone, adminPassword, ...restaurantData } = createRestaurantDto;
+
     return this.prisma.restaurant.create({
       data: {
-        ...createRestaurantDto,
-        subscriptionEndDate: createRestaurantDto.subscriptionEndDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 jours par défaut
+        ...restaurantData,
+        subscriptionEndDate: restaurantData.subscriptionEndDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        users: {
+          create: {
+            email: adminEmail,
+            password: hashedPassword,
+            firstName: adminFirstName,
+            lastName: adminLastName,
+            phone: adminPhone,
+            role: 'ADMIN',
+            status: 'ACTIVE',
+          },
+        },
+      },
+      include: {
+        users: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
       },
     });
   }

@@ -58,4 +58,25 @@ export class CreateRestaurantDto {
   @IsOptional()
   @IsDateString()
   subscriptionEndDate?: Date;
+
+  // Admin user fields
+  @ApiProperty()
+  @IsString()
+  adminFirstName: string;
+
+  @ApiProperty()
+  @IsString()
+  adminLastName: string;
+
+  @ApiProperty()
+  @IsEmail()
+  adminEmail: string;
+
+  @ApiProperty()
+  @IsString()
+  adminPhone: string;
+
+  @ApiProperty()
+  @IsString()
+  adminPassword: string;
 }
