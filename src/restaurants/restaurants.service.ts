@@ -105,7 +105,7 @@ export class RestaurantsService {
       activeRestaurants,
       totalAdmins,
       totalServers,
-      revenueThisMonth: totalRestaurants * 50, // Exemple: 50€ par restaurant
+      revenueThisMonth: totalRestaurants * 300000, // Exemple: 300 000 FCFA par restaurant
       revenueGrowth: 12.5,
       newRestaurantsThisMonth: restaurantsThisMonth,
     };

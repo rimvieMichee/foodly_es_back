@@ -29,17 +29,17 @@ async function main() {
     password: 'foodtech',
   });
 
-  // Créer un restaurant de démonstration
+  // Créer un restaurant de démonstration pour le Burkina Faso
   const restaurant = await prisma.restaurant.upsert({
-    where: { email: 'demo@restaurant.com' },
+    where: { email: 'contact@chezfatou.bf' },
     update: {},
     create: {
-      name: 'Restaurant Démo',
-      address: '123 Rue de la Paix',
-      city: 'Paris',
-      country: 'France',
-      phone: '+33 1 42 86 82 82',
-      email: 'demo@restaurant.com',
+      name: 'Chez Fatou',
+      address: 'Avenue Kwame Nkrumah',
+      city: 'Ouagadougou',
+      country: 'Burkina Faso',
+      phone: '+226 25 30 45 67',
+      email: 'contact@chezfatou.bf',
       status: 'ACTIVE',
       subscriptionPlan: 'PREMIUM',
       subscriptionEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 an
@@ -51,14 +51,14 @@ async function main() {
   // Créer un admin pour le restaurant démo
   const adminPassword = await bcrypt.hash('admin123', 10);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@restaurant.com' },
+    where: { email: 'admin@chezfatou.bf' },
     update: {},
     create: {
-      email: 'admin@restaurant.com',
+      email: 'admin@chezfatou.bf',
       password: adminPassword,
-      firstName: 'Admin',
-      lastName: 'Restaurant',
-      phone: '+33 6 12 34 56 78',
+      firstName: 'Fatou',
+      lastName: 'Ouédraogo',
+      phone: '+226 70 12 34 56',
       role: 'ADMIN',
       status: 'ACTIVE',
       restaurantId: restaurant.id,
@@ -73,7 +73,7 @@ async function main() {
   console.log('\n🎉 Seed terminé avec succès!');
   console.log('\n📝 Comptes créés:');
   console.log('   Technicien: foodtech@foodly.com / foodtech');
-  console.log('   Admin: admin@restaurant.com / admin123');
+  console.log('   Admin: admin@chezfatou.bf / admin123');
 }
 
 main()
