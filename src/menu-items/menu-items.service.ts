@@ -8,8 +8,27 @@ export class MenuItemsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createMenuItemDto: CreateMenuItemDto) {
+    // S'assurer que restaurantId est défini
+    if (!createMenuItemDto.restaurantId) {
+      throw new Error('restaurantId is required');
+    }
+    
     return this.prisma.menuItem.create({
-      data: createMenuItemDto,
+      data: {
+        name: createMenuItemDto.name,
+        description: createMenuItemDto.description,
+        price: createMenuItemDto.price,
+        category: createMenuItemDto.category,
+        restaurantId: createMenuItemDto.restaurantId,
+        imageUrl: createMenuItemDto.imageUrl,
+        isAvailable: createMenuItemDto.isAvailable ?? true,
+        preparationTime: createMenuItemDto.preparationTime,
+        rating: createMenuItemDto.rating,
+        isPopular: createMenuItemDto.isPopular,
+        alcoholContent: createMenuItemDto.alcoholContent,
+        calories: createMenuItemDto.calories,
+        allergens: createMenuItemDto.allergens,
+      },
     });
   }
 
