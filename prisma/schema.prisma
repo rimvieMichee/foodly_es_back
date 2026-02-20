@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String
+  role      Role     @default(SERVER)
+  status    UserStatus @default(ACTIVE)
+  address   Address?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  orders    Order[]  @relation("ServerOrders")
+  
+  @@map("users")
+}
+
+model Address {
+  id             String  @id @default(uuid())
+  userId         String  @unique
+  street         String
+  doorNumber     String
+  doorColor      String?
+  sector         String
+  neighborhood   String
+  city           String
+  postalCode     String
+  arrondissement String
+  latitude       Float
+  longitude      Float
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("addresses")
+}
+
+model MenuItem {
+  id              String   @id @default(uuid())
+  name            String
+  description     String
+  price           Float
+  category        Category
+  imageUrl        String?
+  isAvailable     Boolean  @default(true)
+  preparationTime Int      @default(15)
+  rating          Float    @default(4.5)
+  isPopular       Boolean  @default(false)
+  alcoholContent  Float?
+  calories        Int?
+  allergens       String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  orderItems OrderItem[]
+  
+  @@map("menu_items")
+}
+
+model Table {
+  id             String      @id @default(uuid())
+  number         String      @unique
+  capacity       Int
+  status         TableStatus @default(AVAILABLE)
+  currentOrderId String?     @unique
+  serverName     String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  
+  orders Order[]
+  
+  @@map("tables")
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  tableId     String
+  tableNumber String
+  serverId    String
+  serverName  String
+  status      OrderStatus @default(PENDING)
+  totalAmount Float
+  notes       String?
+  createdAt   DateTime    @default(now())
+  readyAt     DateTime?
+  deliveredAt DateTime?
+  updatedAt   DateTime    @updatedAt
+  
+  table Table        @relation(fields: [tableId], references: [id])
+  server User        @relation("ServerOrders", fields: [serverId], references: [id])
+  items OrderItem[]
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  menuItemId String
+  quantity  Int
+  price     Float
+  comment   String?
+  createdAt DateTime @default(now())
+  
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+  
+  @@map("order_items")
+}
+
+enum Role {
+  ADMIN
+  SERVER
+  CLIENT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum Category {
+  FOOD
+  DRINK
+  DESSERT
+}
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PREPARATION
+  READY
+  DELIVERED
+  CANCELLED
+}
