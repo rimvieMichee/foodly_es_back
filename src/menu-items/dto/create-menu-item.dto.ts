@@ -28,7 +28,9 @@ export class CreateMenuItemDto {
   @Min(0)
   price: number;
 
-  @ApiProperty({ enum: Category })
+  @ApiProperty({ enum: ['FOOD', 'DRINK', 'DESSERT'] })
+  @IsEnum(['FOOD', 'DRINK', 'DESSERT'])
+  category: string;
   @IsEnum(Category)
   category: Category;
 
