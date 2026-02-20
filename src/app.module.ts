@@ -8,6 +8,8 @@ import { MenuItemsModule } from './menu-items/menu-items.module';
 import { TablesModule } from './tables/tables.module';
 import { OrdersModule } from './orders/orders.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { UploadModule } from './upload/upload.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -23,6 +25,8 @@ import { AppController } from './app.controller';
     TablesModule,
     OrdersModule,
     DashboardModule,
+    CloudinaryModule,
+    UploadModule,
   ],
   controllers: [AppController],
 })
