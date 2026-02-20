@@ -23,13 +23,10 @@ services:
       - key: CORS_ORIGIN
         value: "*"
 
+databases:
   # PostgreSQL Database
-  - type: pserv
-    name: foodly-db
-    env: docker
+  - name: foodly-db
+    databaseName: foodly_db
+    user: foodly_user
     region: frankfurt
     plan: free
-    disk:
-      name: foodly-data
-      mountPath: /var/lib/postgresql/data
-      sizeGB: 1
