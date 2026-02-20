@@ -9,11 +9,16 @@ export class TablesService {
 
   async create(createTableDto: CreateTableDto) {
     const existingTable = await this.prisma.table.findUnique({
-      where: { number: createTableDto.number },
+      where: { 
+        restaurantId_number: {
+          restaurantId: createTableDto.restaurantId,
+          number: createTableDto.number
+        }
+      },
     });
 
     if (existingTable) {
-      throw new ConflictException('Table number already exists');
+      throw new ConflictException('Table number already exists for this restaurant');
     }
 
     return this.prisma.table.create({

@@ -48,12 +48,11 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const { password, ...result } = user;
-    const payload = { email: result.email, sub: result.id, role: result.role };
+    const payload = { email: user.email, sub: user.id, role: user.role };
 
     return {
       access_token: this.jwtService.sign(payload),
-      user: result,
+      user: user,
     };
   }
 }
