@@ -5,7 +5,7 @@ services:
     env: node
     region: frankfurt
     plan: free
-    buildCommand: npm install && npm run build && npx prisma migrate deploy
+    buildCommand: npm install && npm run build && npx prisma migrate deploy && npx ts-node prisma/seed.ts
     startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
