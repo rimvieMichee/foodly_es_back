@@ -16,7 +16,16 @@ export class MenuItemsController {
   @ApiOperation({ summary: 'Create a new menu item' })
   create(@Body() createMenuItemDto: CreateMenuItemDto, @Req() req) {
     // Ajouter automatiquement le restaurantId depuis le JWT
-    const restaurantId = req.user.restaurantId;
+    console.log('req.user:', req.user);
+    console.log('restaurantId from JWT:', req.user?.restaurantId);
+    
+    const restaurantId = req.user?.restaurantId;
+    
+    if (!restaurantId) {
+      console.error('restaurantId is missing from JWT token');
+      throw new Error('restaurantId is missing from JWT token');
+    }
+    
     return this.menuItemsService.create({
       ...createMenuItemDto,
       restaurantId
