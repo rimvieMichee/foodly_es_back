@@ -35,6 +35,11 @@ export class CreateMenuItemDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
+  subcategory?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
   imageUrl?: string;
 
   @ApiProperty({ default: true })

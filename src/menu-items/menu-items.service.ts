@@ -19,6 +19,7 @@ export class MenuItemsService {
         description: createMenuItemDto.description,
         price: createMenuItemDto.price,
         category: createMenuItemDto.category,
+        subcategory: createMenuItemDto.subcategory,
         restaurantId: createMenuItemDto.restaurantId,
         imageUrl: createMenuItemDto.imageUrl,
         isAvailable: createMenuItemDto.isAvailable ?? true,

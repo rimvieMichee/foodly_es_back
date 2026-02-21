@@ -77,6 +77,7 @@ model MenuItem {
   description     String
   price           Float
   category        Category
+  subcategory     String?
   imageUrl        String?
   isAvailable     Boolean  @default(true)
   preparationTime Int      @default(15)
