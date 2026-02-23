@@ -65,4 +65,9 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  specialInstructions?: string;
 }

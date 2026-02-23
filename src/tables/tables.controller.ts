@@ -21,8 +21,12 @@ export class TablesController {
   @Get()
   @ApiOperation({ summary: 'Get all tables' })
   @ApiQuery({ name: 'status', required: false })
-  findAll(@Query('status') status?: string) {
-    return this.tablesService.findAll(status);
+  @ApiQuery({ name: 'restaurantId', required: false })
+  findAll(
+    @Query('status') status?: string,
+    @Query('restaurantId') restaurantId?: string,
+  ) {
+    return this.tablesService.findAll(status, restaurantId);
   }
 
   @Get(':id')

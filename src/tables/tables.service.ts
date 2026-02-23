@@ -26,9 +26,20 @@ export class TablesService {
     });
   }
 
-  async findAll(status?: string) {
+  async findAll(status?: string, restaurantId?: string) {
+    const where: any = {};
+    
+    if (status) {
+      // Convertir le status en majuscules pour correspondre à l'enum TableStatus
+      where.status = status.toUpperCase() as any;
+    }
+    
+    if (restaurantId) {
+      where.restaurantId = restaurantId;
+    }
+    
     return this.prisma.table.findMany({
-      where: status ? { status: status as any } : undefined,
+      where: Object.keys(where).length > 0 ? where : undefined,
       orderBy: { number: 'asc' },
     });
   }

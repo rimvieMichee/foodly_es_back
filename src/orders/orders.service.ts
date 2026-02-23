@@ -8,11 +8,13 @@ export class OrdersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createOrderDto: CreateOrderDto) {
-    const { items, ...orderData } = createOrderDto;
+    const { items, specialInstructions, ...orderData } = createOrderDto;
 
     return this.prisma.order.create({
       data: {
         ...orderData,
+        // Mapper specialInstructions vers notes pour compatibilité
+        notes: specialInstructions || orderData.notes,
         items: {
           create: items.map((item) => ({
             menuItemId: item.menuItemId,
