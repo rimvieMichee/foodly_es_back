@@ -66,6 +66,7 @@ model Restaurant {
   menuItems  MenuItem[]
   tables     Table[]
   orders     Order[]
+  dailyMenus DailyMenu[]
   
   @@map("restaurants")
 }
@@ -134,6 +135,26 @@ model Order {
   items      OrderItem[]
   
   @@map("orders")
+}
+
+model DailyMenu {
+  id              String   @id @default(uuid())
+  restaurantId    String
+  name            String
+  description     String?
+  originalPrice   Float
+  discountedPrice Float
+  discountPercent Int
+  menuItemIds     String[]
+  isActive        Boolean  @default(true)
+  validFrom       DateTime @default(now())
+  validUntil      DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  
+  @@map("daily_menus")
 }
 
 model OrderItem {

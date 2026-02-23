@@ -10,6 +10,7 @@ import { OrdersModule } from './orders/orders.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { UploadModule } from './upload/upload.module';
+import { DailyMenusModule } from './daily-menus/daily-menus.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -27,6 +28,7 @@ import { AppController } from './app.controller';
     DashboardModule,
     CloudinaryModule,
     UploadModule,
+    DailyMenusModule,
   ],
   controllers: [AppController],
 })
