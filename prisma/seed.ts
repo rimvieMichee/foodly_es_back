@@ -6,29 +6,6 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Créer le compte technicien par défaut
-  const hashedPassword = await bcrypt.hash('foodtech', 10);
-
-  const technician = await prisma.user.upsert({
-    where: { email: 'foodtech@foodly.com' },
-    update: {},
-    create: {
-      email: 'foodtech@foodly.com',
-      password: hashedPassword,
-      firstName: 'Food',
-      lastName: 'Tech',
-      phone: '+33 6 00 00 00 00',
-      role: 'TECHNICIAN',
-      status: 'ACTIVE',
-    },
-  });
-
-  console.log('✅ Compte technicien créé:', {
-    email: technician.email,
-    username: 'foodtech',
-    password: 'foodtech',
-  });
-
   // Créer un restaurant de démonstration pour le Burkina Faso
   const restaurant = await prisma.restaurant.upsert({
     where: { email: 'contact@chezfatou.bf' },
@@ -47,6 +24,32 @@ async function main() {
   });
 
   console.log('✅ Restaurant démo créé:', restaurant.name);
+
+  // Créer le compte technicien par défaut avec restaurantId
+  const hashedPassword = await bcrypt.hash('foodtech', 10);
+
+  const technician = await prisma.user.upsert({
+    where: { email: 'foodtech@foodly.com' },
+    update: {
+      restaurantId: restaurant.id, // Forcer la mise à jour du restaurantId
+    },
+    create: {
+      email: 'foodtech@foodly.com',
+      password: hashedPassword,
+      firstName: 'Food',
+      lastName: 'Tech',
+      phone: '+33 6 00 00 00 00',
+      role: 'TECHNICIAN',
+      status: 'ACTIVE',
+      restaurantId: restaurant.id,
+    },
+  });
+
+  console.log('✅ Compte technicien créé:', {
+    email: technician.email,
+    username: 'foodtech',
+    password: 'foodtech',
+  });
 
   // Créer un admin pour le restaurant démo
   const adminPassword = await bcrypt.hash('admin123', 10);
