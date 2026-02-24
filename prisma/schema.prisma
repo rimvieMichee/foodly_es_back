@@ -17,6 +17,7 @@ model User {
   role         Role        @default(SERVER)
   status       UserStatus  @default(ACTIVE)
   restaurantId String?
+  fcmToken     String?
   address      Address?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt

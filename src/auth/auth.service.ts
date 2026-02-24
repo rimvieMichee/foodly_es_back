@@ -61,4 +61,8 @@ export class AuthService {
       user: user,
     };
   }
+
+  async updateFcmToken(userId: string, fcmToken: string) {
+    return this.usersService.updateFcmToken(userId, fcmToken);
+  }
 }

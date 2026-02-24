@@ -100,4 +100,18 @@ export class UsersService {
       where: { id },
     });
   }
+
+  async updateFcmToken(userId: string, fcmToken: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { fcmToken },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        fcmToken: true,
+      },
+    });
+  }
 }

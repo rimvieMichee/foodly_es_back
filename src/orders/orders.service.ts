@@ -2,10 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async create(createOrderDto: CreateOrderDto) {
     const { items, specialInstructions, ...orderData } = createOrderDto;
@@ -99,7 +103,7 @@ export class OrdersService {
   }
 
   async updateStatus(id: string, status: string) {
-    await this.findOne(id);
+    const order = await this.findOne(id);
 
     const updateData: any = { status };
 
@@ -109,7 +113,7 @@ export class OrdersService {
       updateData.deliveredAt = new Date();
     }
 
-    return this.prisma.order.update({
+    const updatedOrder = await this.prisma.order.update({
       where: { id },
       data: updateData,
       include: {
@@ -118,8 +122,51 @@ export class OrdersService {
             menuItem: true,
           },
         },
+        server: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            fcmToken: true,
+          },
+        },
       },
     });
+
+    // Envoyer une notification au serveur
+    if (updatedOrder.server?.fcmToken) {
+      try {
+        if (status === 'IN_PREPARATION') {
+          await this.notificationsService.sendToDevice(
+            updatedOrder.server.fcmToken,
+            '👨‍🍳 Commande en préparation',
+            `Table ${updatedOrder.tableNumber} - Votre commande est en cours de préparation`,
+            {
+              type: 'ORDER_STATUS_UPDATE',
+              orderId: updatedOrder.id,
+              tableNumber: updatedOrder.tableNumber,
+              status: 'IN_PREPARATION',
+            },
+          );
+        } else if (status === 'READY') {
+          await this.notificationsService.sendToDevice(
+            updatedOrder.server.fcmToken,
+            '✅ Commande prête',
+            `Table ${updatedOrder.tableNumber} - La commande est prête à être servie`,
+            {
+              type: 'ORDER_STATUS_UPDATE',
+              orderId: updatedOrder.id,
+              tableNumber: updatedOrder.tableNumber,
+              status: 'READY',
+            },
+          );
+        }
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi de la notification:', error);
+      }
+    }
+
+    return updatedOrder;
   }
 
   async remove(id: string) {

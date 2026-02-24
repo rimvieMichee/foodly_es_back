@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -23,5 +23,12 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  @Patch('fcm-token')
+  @ApiOperation({ summary: 'Update user FCM token' })
+  @ApiResponse({ status: 200, description: 'FCM token updated successfully' })
+  async updateFcmToken(@Body() body: { userId: string; fcmToken: string }) {
+    return this.authService.updateFcmToken(body.userId, body.fcmToken);
   }
 }
