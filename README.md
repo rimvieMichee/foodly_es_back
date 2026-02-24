@@ -1,6 +1,7 @@
 # Foodly Backend API
 
-Backend API pour le système de gestion de restaurant Foodly, construit avec NestJS, Prisma et PostgreSQL.
+Backend API pour le système de gestion de restaurant Foodly, construit avec NestJS, Prisma et
+PostgreSQL.
 
 ## 🚀 Technologies
 
@@ -145,10 +146,12 @@ foodly_back/
 ## 🔑 Endpoints principaux
 
 ### Authentification
+
 - `POST /api/auth/register` - Inscription
 - `POST /api/auth/login` - Connexion
 
 ### Utilisateurs (Serveurs)
+
 - `GET /api/users` - Liste des utilisateurs
 - `POST /api/users` - Créer un utilisateur
 - `GET /api/users/:id` - Détails d'un utilisateur
@@ -156,6 +159,7 @@ foodly_back/
 - `DELETE /api/users/:id` - Supprimer un utilisateur
 
 ### Menu Items (Produits)
+
 - `GET /api/menu-items` - Liste des produits
 - `POST /api/menu-items` - Créer un produit
 - `GET /api/menu-items/:id` - Détails d'un produit
@@ -164,6 +168,7 @@ foodly_back/
 - `DELETE /api/menu-items/:id` - Supprimer un produit
 
 ### Tables
+
 - `GET /api/tables` - Liste des tables
 - `POST /api/tables` - Créer une table
 - `GET /api/tables/:id` - Détails d'une table
@@ -172,6 +177,7 @@ foodly_back/
 - `DELETE /api/tables/:id` - Supprimer une table
 
 ### Commandes
+
 - `GET /api/orders` - Liste des commandes
 - `POST /api/orders` - Créer une commande
 - `GET /api/orders/:id` - Détails d'une commande
@@ -181,6 +187,7 @@ foodly_back/
 - `DELETE /api/orders/:id` - Supprimer une commande
 
 ### Dashboard
+
 - `GET /api/dashboard/stats` - Statistiques générales
 - `GET /api/dashboard/revenue-by-month` - Revenus par mois
 - `GET /api/dashboard/orders-by-category` - Commandes par catégorie
@@ -227,6 +234,7 @@ npx prisma format
 ### Variables d'environnement de production
 
 Assurez-vous de configurer correctement :
+
 - `DATABASE_URL` avec vos credentials de production
 - `JWT_SECRET` avec une clé sécurisée
 - `NODE_ENV=production`
@@ -242,9 +250,11 @@ npm run start:prod
 ## 🤝 Intégration avec les applications clientes
 
 ### Application mobile Flutter
+
 L'API est conçue pour fonctionner avec l'application mobile Foodly (serveurs).
 
 ### Application admin Angular
+
 L'API fournit tous les endpoints nécessaires pour le dashboard admin Foodly.
 
 ## 📝 Notes importantes
@@ -257,15 +267,19 @@ L'API fournit tous les endpoints nécessaires pour le dashboard admin Foodly.
 ## 🐛 Dépannage
 
 ### Erreur de connexion à la base de données
+
 Vérifiez que PostgreSQL est démarré et que `DATABASE_URL` est correct.
 
 ### Erreur Prisma Client
+
 Régénérez le client Prisma :
+
 ```bash
 npm run prisma:generate
 ```
 
 ### Port déjà utilisé
+
 Changez le `PORT` dans `.env`
 
 ## 📄 Licence

@@ -12,6 +12,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { UploadModule } from './upload/upload.module';
 import { DailyMenusModule } from './daily-menus/daily-menus.module';
 import { AppController } from './app.controller';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AppController } from './app.controller';
     CloudinaryModule,
     UploadModule,
     DailyMenusModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
 })

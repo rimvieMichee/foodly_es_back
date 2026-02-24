@@ -40,22 +40,22 @@ git push -u origin main
 1. **Connectez-vous à Render** : https://dashboard.render.com
 
 2. **Créer un nouveau Blueprint** :
-   - Cliquez sur "New +" → "Blueprint"
-   - Connectez votre repository GitHub
-   - Sélectionnez le repository `foodly-backend`
-   - Render détectera automatiquement le fichier `render.yaml`
+    - Cliquez sur "New +" → "Blueprint"
+    - Connectez votre repository GitHub
+    - Sélectionnez le repository `foodly-backend`
+    - Render détectera automatiquement le fichier `render.yaml`
 
 3. **Configurer les variables d'environnement** :
-   - Le `JWT_SECRET` sera généré automatiquement
-   - La `DATABASE_URL` sera liée automatiquement à la base de données PostgreSQL
-   - Vous pouvez modifier `CORS_ORIGIN` si nécessaire
+    - Le `JWT_SECRET` sera généré automatiquement
+    - La `DATABASE_URL` sera liée automatiquement à la base de données PostgreSQL
+    - Vous pouvez modifier `CORS_ORIGIN` si nécessaire
 
 4. **Déployer** :
-   - Cliquez sur "Apply"
-   - Render va créer :
-     - Une base de données PostgreSQL
-     - Un service web NestJS
-   - Le déploiement prend environ 5-10 minutes
+    - Cliquez sur "Apply"
+    - Render va créer :
+        - Une base de données PostgreSQL
+        - Un service web NestJS
+    - Le déploiement prend environ 5-10 minutes
 
 ### Option B : Déploiement manuel
 
@@ -63,11 +63,11 @@ git push -u origin main
 
 1. Dans le dashboard Render, cliquez sur "New +" → "PostgreSQL"
 2. Configurez :
-   - **Name** : `foodly-db`
-   - **Database** : `foodly_db`
-   - **User** : `foodly_user` (ou laissez par défaut)
-   - **Region** : Frankfurt (ou le plus proche de vous)
-   - **Plan** : Free
+    - **Name** : `foodly-db`
+    - **Database** : `foodly_db`
+    - **User** : `foodly_user` (ou laissez par défaut)
+    - **Region** : Frankfurt (ou le plus proche de vous)
+    - **Plan** : Free
 3. Cliquez sur "Create Database"
 4. **Notez l'URL de connexion** (Internal Database URL)
 
@@ -76,14 +76,14 @@ git push -u origin main
 1. Cliquez sur "New +" → "Web Service"
 2. Connectez votre repository GitHub
 3. Configurez :
-   - **Name** : `foodly-api`
-   - **Region** : Frankfurt (même région que la DB)
-   - **Branch** : `main`
-   - **Root Directory** : (laisser vide)
-   - **Runtime** : Node
-   - **Build Command** : `npm install && npm run build && npx prisma migrate deploy`
-   - **Start Command** : `npm run start:prod`
-   - **Plan** : Free
+    - **Name** : `foodly-api`
+    - **Region** : Frankfurt (même région que la DB)
+    - **Branch** : `main`
+    - **Root Directory** : (laisser vide)
+    - **Runtime** : Node
+    - **Build Command** : `npm install && npm run build && npx prisma migrate deploy`
+    - **Start Command** : `npm run start:prod`
+    - **Plan** : Free
 
 4. **Variables d'environnement** :
    Cliquez sur "Advanced" → "Add Environment Variable" et ajoutez :
@@ -108,11 +108,13 @@ Le déploiement prend environ 5-10 minutes. Vous verrez les logs en temps réel.
 ### 3.2 Tester l'API
 
 Une fois déployé, votre API sera accessible sur :
+
 ```
 https://foodly-api.onrender.com
 ```
 
 Testez les endpoints :
+
 - **API Base** : `https://foodly-api.onrender.com/api`
 - **Swagger Docs** : `https://foodly-api.onrender.com/api/docs`
 - **Health Check** : `https://foodly-api.onrender.com/api/auth/login` (devrait retourner 400 ou 401)
@@ -153,6 +155,7 @@ git push origin main
 ### Accéder à la base de données
 
 #### Via Render Dashboard
+
 1. Allez dans votre service PostgreSQL
 2. Cliquez sur "Connect" → "External Connection"
 3. Utilisez les credentials fournis avec un client PostgreSQL (pgAdmin, DBeaver, etc.)
@@ -170,23 +173,28 @@ npm run prisma:studio
 ### Exécuter des migrations
 
 Les migrations sont automatiquement exécutées lors du build grâce à :
+
 ```bash
 npx prisma migrate deploy
 ```
 
 Si vous devez exécuter manuellement :
+
 1. Connectez-vous au shell Render
 2. Exécutez : `npx prisma migrate deploy`
 
 ## 📊 Monitoring et Logs
 
 ### Voir les logs
+
 1. Allez dans votre service web sur Render
 2. Cliquez sur "Logs"
 3. Vous verrez les logs en temps réel
 
 ### Métriques
+
 Render Free tier inclut :
+
 - 750 heures/mois
 - 512 MB RAM
 - La base de données expire après 90 jours d'inactivité
@@ -220,7 +228,8 @@ Render Free tier inclut :
 ### L'application ne démarre pas
 
 **Problème** : Port déjà utilisé
-**Solution** : Render utilise automatiquement la variable `PORT`, assurez-vous que votre `main.ts` utilise `process.env.PORT`
+**Solution** : Render utilise automatiquement la variable `PORT`, assurez-vous que votre `main.ts`
+utilise `process.env.PORT`
 
 **Problème** : Erreur de connexion à la base de données
 **Solution** : Utilisez l'**Internal Database URL** et non l'External
@@ -228,7 +237,8 @@ Render Free tier inclut :
 ### L'API est lente
 
 **Problème** : Le service Free tier s'endort après 15 minutes d'inactivité
-**Solution** : 
+**Solution** :
+
 - Utilisez un service de ping (ex: UptimeRobot)
 - Passez au plan payant ($7/mois) pour éviter le sleep
 
@@ -237,6 +247,7 @@ Render Free tier inclut :
 ### Application mobile Flutter
 
 Modifiez l'URL de l'API dans votre code Flutter :
+
 ```dart
 const String API_BASE_URL = 'https://foodly-api.onrender.com/api';
 ```
@@ -244,6 +255,7 @@ const String API_BASE_URL = 'https://foodly-api.onrender.com/api';
 ### Application admin Angular
 
 Modifiez `environment.prod.ts` :
+
 ```typescript
 export const environment = {
   production: true,
