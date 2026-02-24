@@ -75,10 +75,35 @@ async function main() {
     password: 'admin123',
   });
 
+  // Créer un serveur pour le restaurant démo
+  const serverPassword = await bcrypt.hash('12345678', 10);
+  const server = await prisma.user.upsert({
+    where: { email: 'madi@gmail.com' },
+    update: {
+      restaurantId: restaurant.id,
+    },
+    create: {
+      email: 'madi@gmail.com',
+      password: serverPassword,
+      firstName: 'Madi',
+      lastName: 'Sawadogo',
+      phone: '+226 70 11 22 33',
+      role: 'SERVER',
+      status: 'ACTIVE',
+      restaurantId: restaurant.id,
+    },
+  });
+
+  console.log('✅ Serveur créé:', {
+    email: server.email,
+    password: '12345678',
+  });
+
   console.log('\n🎉 Seed terminé avec succès!');
   console.log('\n📝 Comptes créés:');
   console.log('   Technicien: foodtech@foodly.com / foodtech');
   console.log('   Admin: admin@chezfatou.bf / admin123');
+  console.log('   Serveur: madi@gmail.com / 12345678');
 }
 
 main()

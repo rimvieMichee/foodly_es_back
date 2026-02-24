@@ -3,18 +3,20 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Injectable()
 export class OrdersService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private notificationsGateway: NotificationsGateway,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
     const { items, specialInstructions, ...orderData } = createOrderDto;
 
-    return this.prisma.order.create({
+    const order = await this.prisma.order.create({
       data: {
         ...orderData,
         // Mapper specialInstructions vers notes pour compatibilité
@@ -36,6 +38,18 @@ export class OrdersService {
         },
       },
     });
+
+    // Émettre un événement WebSocket pour notifier les admins
+    this.notificationsGateway.notifyNewOrder({
+      orderId: order.id,
+      tableNumber: order.tableNumber,
+      serverName: order.serverName,
+      totalAmount: order.totalAmount,
+      itemCount: order.items.length,
+      createdAt: order.createdAt,
+    });
+
+    return order;
   }
 
   async findAll(serverId?: string, status?: string) {
