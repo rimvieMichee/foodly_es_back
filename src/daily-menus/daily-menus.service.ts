@@ -29,7 +29,7 @@ export class DailyMenusService {
   }
 
   async findAll(restaurantId?: string, isActive?: boolean) {
-    return this.prisma.dailyMenu.findMany({
+    const dailyMenus = await this.prisma.dailyMenu.findMany({
       where: {
         ...(restaurantId && { restaurantId }),
         ...(isActive !== undefined && { isActive }),
@@ -38,12 +38,73 @@ export class DailyMenusService {
         createdAt: 'desc',
       },
     });
+
+    // Populer les menuItems avec leurs données complètes
+    const menusWithItems = await Promise.all(
+      dailyMenus.map(async (menu) => {
+        if (menu.menuItemIds && menu.menuItemIds.length > 0) {
+          const menuItems = await this.prisma.menuItem.findMany({
+            where: {
+              id: { in: menu.menuItemIds },
+            },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              price: true,
+              imageUrl: true,
+              category: true,
+            },
+          });
+          return {
+            ...menu,
+            menuItems,
+          };
+        }
+        return {
+          ...menu,
+          menuItems: [],
+        };
+      })
+    );
+
+    return menusWithItems;
   }
 
   async findOne(id: string) {
-    return this.prisma.dailyMenu.findUnique({
+    const menu = await this.prisma.dailyMenu.findUnique({
       where: { id },
     });
+
+    if (!menu) {
+      return null;
+    }
+
+    // Populer les menuItems avec leurs données complètes
+    if (menu.menuItemIds && menu.menuItemIds.length > 0) {
+      const menuItems = await this.prisma.menuItem.findMany({
+        where: {
+          id: { in: menu.menuItemIds },
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          price: true,
+          imageUrl: true,
+          category: true,
+        },
+      });
+      return {
+        ...menu,
+        menuItems,
+      };
+    }
+
+    return {
+      ...menu,
+      menuItems: [],
+    };
   }
 
   async update(id: string, updateDailyMenuDto: UpdateDailyMenuDto) {
@@ -84,7 +145,7 @@ export class DailyMenusService {
 
   async getActiveMenus(restaurantId: string) {
     const now = new Date();
-    return this.prisma.dailyMenu.findMany({
+    const dailyMenus = await this.prisma.dailyMenu.findMany({
       where: {
         restaurantId,
         isActive: true,
@@ -95,5 +156,36 @@ export class DailyMenusService {
         createdAt: 'desc',
       },
     });
+
+    // Populer les menuItems avec leurs données complètes
+    const menusWithItems = await Promise.all(
+      dailyMenus.map(async (menu) => {
+        if (menu.menuItemIds && menu.menuItemIds.length > 0) {
+          const menuItems = await this.prisma.menuItem.findMany({
+            where: {
+              id: { in: menu.menuItemIds },
+            },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              price: true,
+              imageUrl: true,
+              category: true,
+            },
+          });
+          return {
+            ...menu,
+            menuItems,
+          };
+        }
+        return {
+          ...menu,
+          menuItems: [],
+        };
+      })
+    );
+
+    return menusWithItems;
   }
 }
