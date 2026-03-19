@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { TablesService } from './tables.service';
 import { CreateTableDto } from './dto/create-table.dto';
@@ -19,13 +19,18 @@ export class TablesController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all tables' })
   @ApiQuery({ name: 'status', required: false })
-  @ApiQuery({ name: 'restaurantId', required: false })
   findAll(
+    @Req() req,
     @Query('status') status?: string,
-    @Query('restaurantId') restaurantId?: string,
   ) {
+    const restaurantId = req.user?.restaurantId;
+    if (!restaurantId) {
+      throw new Error('restaurantId is missing from JWT token');
+    }
     return this.tablesService.findAll(status, restaurantId);
   }
 

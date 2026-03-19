@@ -27,7 +27,13 @@ export class DailyMenusController {
   }
 
   @Get()
-  findAll(@Query('restaurantId') restaurantId?: string, @Query('isActive') isActive?: string) {
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  findAll(@Req() req, @Query('isActive') isActive?: string) {
+    const restaurantId = req.user?.restaurantId;
+    if (!restaurantId) {
+      throw new Error('restaurantId is missing from JWT token');
+    }
     return this.dailyMenusService.findAll(
       restaurantId,
       isActive !== undefined ? isActive === 'true' : undefined

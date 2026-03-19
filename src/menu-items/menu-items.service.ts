@@ -33,9 +33,10 @@ export class MenuItemsService {
     });
   }
 
-  async findAll(category?: string, isAvailable?: boolean) {
+  async findAll(restaurantId: string, category?: string, isAvailable?: boolean) {
     return this.prisma.menuItem.findMany({
       where: {
+        restaurantId,
         ...(category && { category: category as any }),
         ...(isAvailable !== undefined && { isAvailable }),
       },

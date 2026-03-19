@@ -33,14 +33,21 @@ export class MenuItemsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all menu items' })
   @ApiQuery({ name: 'category', required: false })
   @ApiQuery({ name: 'isAvailable', required: false, type: Boolean })
   findAll(
     @Query('category') category?: string,
     @Query('isAvailable') isAvailable?: boolean,
+    @Req() req,
   ) {
-    return this.menuItemsService.findAll(category, isAvailable);
+    const restaurantId = req.user?.restaurantId;
+    if (!restaurantId) {
+      throw new Error('restaurantId is missing from JWT token');
+    }
+    return this.menuItemsService.findAll(restaurantId, category, isAvailable);
   }
 
   @Get(':id')

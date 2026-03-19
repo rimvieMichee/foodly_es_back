@@ -52,9 +52,10 @@ export class OrdersService {
     return order;
   }
 
-  async findAll(serverId?: string, status?: string) {
+  async findAll(restaurantId: string, serverId?: string, status?: string) {
     return this.prisma.order.findMany({
       where: {
+        restaurantId,
         ...(serverId && { serverId }),
         ...(status && { status: status as any }),
       },
