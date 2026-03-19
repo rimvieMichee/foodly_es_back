@@ -39,9 +39,9 @@ export class MenuItemsController {
   @ApiQuery({ name: 'category', required: false })
   @ApiQuery({ name: 'isAvailable', required: false, type: Boolean })
   findAll(
+    @Req() req,
     @Query('category') category?: string,
     @Query('isAvailable') isAvailable?: boolean,
-    @Req() req,
   ) {
     const restaurantId = req.user?.restaurantId;
     if (!restaurantId) {
