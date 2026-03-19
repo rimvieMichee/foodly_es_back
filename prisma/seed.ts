@@ -7,21 +7,27 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // Créer un restaurant de démonstration pour le Burkina Faso
-  const restaurant = await prisma.restaurant.upsert({
-    where: { email: 'contact@chezfatou.bf' },
-    update: {},
-    create: {
-      name: 'Chez Fatou',
-      address: 'Avenue Kwame Nkrumah',
-      city: 'Ouagadougou',
-      country: 'Burkina Faso',
-      phone: '+226 25 30 45 67',
-      email: 'contact@chezfatou.bf',
-      status: 'ACTIVE',
-      subscriptionPlan: 'PREMIUM',
-      subscriptionEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 an
-    },
+  // Vérifier si le restaurant existe déjà
+  let restaurant = await prisma.restaurant.findFirst({
+    where: { name: 'Chez Fatou', city: 'Ouagadougou' },
   });
+
+  if (!restaurant) {
+    restaurant = await prisma.restaurant.create({
+      data: {
+        name: 'Chez Fatou',
+        address: 'Avenue Kwame Nkrumah',
+        quartier: 'Koulouba',
+        city: 'Ouagadougou',
+        country: 'Burkina Faso',
+        phone: '+226 25 30 45 67',
+        email: 'contact@chezfatou.bf',
+        status: 'ACTIVE',
+        subscriptionPlan: 'PREMIUM',
+        subscriptionEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 an
+      },
+    });
+  }
 
   console.log('✅ Restaurant démo créé:', restaurant.name);
 

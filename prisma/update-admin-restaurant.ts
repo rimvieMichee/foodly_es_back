@@ -6,8 +6,8 @@ async function main() {
   console.log('Mise à jour du restaurantId pour admin@chezfatou.bf...');
 
   // Trouver le restaurant "Chez Fatou"
-  const restaurant = await prisma.restaurant.findUnique({
-    where: { email: 'contact@chezfatou.bf' },
+  const restaurant = await prisma.restaurant.findFirst({
+    where: { name: 'Chez Fatou', city: 'Ouagadougou' },
   });
 
   if (!restaurant) {
