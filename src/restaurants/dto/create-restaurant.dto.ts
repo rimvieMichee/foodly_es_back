@@ -19,9 +19,10 @@ export class CreateRestaurantDto {
   @IsString()
   name: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  address: string;
+  quartier?: string;
 
   @ApiProperty()
   @IsString()
@@ -35,9 +36,10 @@ export class CreateRestaurantDto {
   @IsString()
   phone: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

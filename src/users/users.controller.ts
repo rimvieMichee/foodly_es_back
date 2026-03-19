@@ -21,8 +21,12 @@ export class UsersController {
   @Get()
   @ApiOperation({ summary: 'Get all users' })
   @ApiQuery({ name: 'role', required: false })
-  findAll(@Query('role') role?: string) {
-    return this.usersService.findAll(role);
+  @ApiQuery({ name: 'restaurantId', required: false })
+  findAll(
+    @Query('role') role?: string,
+    @Query('restaurantId') restaurantId?: string,
+  ) {
+    return this.usersService.findAll(role, restaurantId);
   }
 
   @Get(':id')

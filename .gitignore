@@ -43,3 +43,7 @@ lerna-debug.log*
 # Prisma
 prisma/migrations/*
 !prisma/migrations/.gitkeep
+
+# Database backups
+backups/
+*.backup.json

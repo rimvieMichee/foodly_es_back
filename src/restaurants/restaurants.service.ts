@@ -9,15 +9,7 @@ export class RestaurantsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createRestaurantDto: CreateRestaurantDto) {
-    // Vérifier si l'email du restaurant ou de l'admin existe déjà
-    const existingRestaurant = await this.prisma.restaurant.findUnique({
-      where: { email: createRestaurantDto.email },
-    });
-
-    if (existingRestaurant) {
-      throw new ConflictException('Un restaurant avec cet email existe déjà');
-    }
-
+    // Vérifier si l'email de l'admin existe déjà
     const existingUser = await this.prisma.user.findUnique({
       where: { email: createRestaurantDto.adminEmail },
     });
@@ -63,17 +55,31 @@ export class RestaurantsService {
   }
 
   async findAll(status?: string) {
-    return this.prisma.restaurant.findMany({
+    const restaurants = await this.prisma.restaurant.findMany({
       where: status ? { status: status as any } : {},
       include: {
         _count: {
           select: {
             users: true,
+            tables: true,
+          },
+        },
+        users: {
+          select: {
+            role: true,
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Transformer les données pour inclure serverCount et tableCount
+    return restaurants.map(restaurant => ({
+      ...restaurant,
+      serverCount: restaurant.users.filter(u => u.role === 'SERVER').length,
+      tableCount: restaurant._count.tables,
+      users: undefined, // Retirer les users de la réponse
+    }));
   }
 
   async findOne(id: string) {

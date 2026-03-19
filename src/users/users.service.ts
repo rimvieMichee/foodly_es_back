@@ -39,9 +39,19 @@ export class UsersService {
     });
   }
 
-  async findAll(role?: string) {
+  async findAll(role?: string, restaurantId?: string) {
+    const where: any = {};
+    
+    if (role) {
+      where.role = role as any;
+    }
+    
+    if (restaurantId) {
+      where.restaurantId = restaurantId;
+    }
+
     return this.prisma.user.findMany({
-      where: role ? { role: role as any } : undefined,
+      where: Object.keys(where).length > 0 ? where : undefined,
       select: {
         id: true,
         email: true,
@@ -50,7 +60,14 @@ export class UsersService {
         phone: true,
         role: true,
         status: true,
+        restaurantId: true,
         createdAt: true,
+        lastLogin: true,
+        restaurant: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
   }

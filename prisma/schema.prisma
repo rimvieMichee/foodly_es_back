@@ -51,11 +51,12 @@ model Address {
 model Restaurant {
   id                  String             @id @default(uuid())
   name                String
-  address             String
+  address             String?
+  quartier            String?
   city                String
   country             String
   phone               String
-  email               String             @unique
+  email               String?
   logo                String?
   status              RestaurantStatus   @default(ACTIVE)
   subscriptionPlan    SubscriptionPlan   @default(FREE)

@@ -24,7 +24,9 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:backup": "ts-node scripts/backup-database.ts",
+    "db:restore": "ts-node scripts/restore-database.ts"
   },
   "dependencies": {
     "@nestjs/cli": "^10.2.1",

@@ -24,12 +24,12 @@ export class RegisterDto {
   @IsNotEmpty()
   firstName: string;
 
-  @ApiProperty({ example: 'Dupont' })
+  @ApiProperty({ example: 'ZONGO' })
   @IsString()
   @IsNotEmpty()
   lastName: string;
 
-  @ApiProperty({ example: '+237690123456' })
+  @ApiProperty({ example: '+22671101010' })
   @IsString()
   @IsNotEmpty()
   phone: string;
