@@ -42,6 +42,11 @@ export class RestaurantsController {
     return this.restaurantsService.findOne(id);
   }
 
+  @Get(':id/stats')
+  getRestaurantStats(@Param('id') id: string) {
+    return this.restaurantsService.getRestaurantStats(id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateRestaurantDto: UpdateRestaurantDto) {
     return this.restaurantsService.update(id, updateRestaurantDto);

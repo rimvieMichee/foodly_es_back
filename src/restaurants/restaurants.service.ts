@@ -162,4 +162,173 @@ export class RestaurantsService {
       newRestaurantsThisMonth: restaurantsThisMonth,
     };
   }
+
+  async getRestaurantStats(restaurantId: string) {
+    // Vérifier que le restaurant existe
+    const restaurant = await this.prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant non trouvé');
+    }
+
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    // Calculer les statistiques quotidiennes
+    const dailyOrders = await this.prisma.order.findMany({
+      where: {
+        restaurantId,
+        createdAt: { gte: startOfDay },
+        status: 'DELIVERED',
+      },
+      include: { items: true },
+    });
+
+    const dailyRevenue = dailyOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+    // Calculer les statistiques mensuelles
+    const monthlyOrders = await this.prisma.order.findMany({
+      where: {
+        restaurantId,
+        createdAt: { gte: startOfMonth },
+        status: 'DELIVERED',
+      },
+      include: { items: true },
+    });
+
+    const monthlyRevenue = monthlyOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+    // Calculer les statistiques annuelles
+    const yearlyOrders = await this.prisma.order.findMany({
+      where: {
+        restaurantId,
+        createdAt: { gte: startOfYear },
+        status: 'DELIVERED',
+      },
+      include: { items: true },
+    });
+
+    const yearlyRevenue = yearlyOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+    // Calculer les revenus par mois pour le graphique (12 derniers mois)
+    const monthlyRevenueData = [];
+    const monthLabels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+    
+    for (let i = 0; i < 12; i++) {
+      const monthStart = new Date(now.getFullYear(), i, 1);
+      const monthEnd = new Date(now.getFullYear(), i + 1, 0, 23, 59, 59);
+      
+      const orders = await this.prisma.order.findMany({
+        where: {
+          restaurantId,
+          createdAt: { gte: monthStart, lte: monthEnd },
+          status: 'DELIVERED',
+        },
+      });
+      
+      const revenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+      monthlyRevenueData.push(revenue);
+    }
+
+    // Calculer les commandes par jour de la semaine (7 derniers jours)
+    const weeklyOrdersData = [];
+    const dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+    
+    for (let i = 6; i >= 0; i--) {
+      const dayStart = new Date(now);
+      dayStart.setDate(now.getDate() - i);
+      dayStart.setHours(0, 0, 0, 0);
+      
+      const dayEnd = new Date(dayStart);
+      dayEnd.setHours(23, 59, 59, 999);
+      
+      const count = await this.prisma.order.count({
+        where: {
+          restaurantId,
+          createdAt: { gte: dayStart, lte: dayEnd },
+        },
+      });
+      
+      weeklyOrdersData.push(count);
+    }
+
+    // Calculer la répartition par catégorie
+    const orderItems = await this.prisma.orderItem.findMany({
+      where: {
+        order: {
+          restaurantId,
+          createdAt: { gte: startOfMonth },
+          status: 'DELIVERED',
+        },
+      },
+      include: {
+        menuItem: true,
+      },
+    });
+
+    const categoryStats = orderItems.reduce((acc, item) => {
+      const category = item.menuItem?.category || 'Autre';
+      if (!acc[category]) {
+        acc[category] = 0;
+      }
+      acc[category] += item.quantity;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const totalItems = Object.values(categoryStats).reduce((sum, count) => sum + count, 0);
+    const categoryPercentages = Object.entries(categoryStats).map(([category, count]) => ({
+      category,
+      percentage: totalItems > 0 ? Math.round((count / totalItems) * 100) : 0,
+    }));
+
+    // Calculer la croissance (comparaison avec le mois précédent)
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+    
+    const previousMonthOrders = await this.prisma.order.findMany({
+      where: {
+        restaurantId,
+        createdAt: { gte: previousMonthStart, lte: previousMonthEnd },
+        status: 'DELIVERED',
+      },
+    });
+
+    const previousMonthRevenue = previousMonthOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const monthlyGrowth = previousMonthRevenue > 0 
+      ? ((monthlyRevenue - previousMonthRevenue) / previousMonthRevenue) * 100 
+      : 0;
+
+    return {
+      daily: {
+        revenue: dailyRevenue,
+        orders: dailyOrders.length,
+        growth: 0, // Calculer si nécessaire
+      },
+      monthly: {
+        revenue: monthlyRevenue,
+        orders: monthlyOrders.length,
+        growth: Math.round(monthlyGrowth * 10) / 10,
+      },
+      yearly: {
+        revenue: yearlyRevenue,
+        orders: yearlyOrders.length,
+        growth: 0, // Calculer si nécessaire
+      },
+      charts: {
+        revenue: {
+          labels: monthLabels,
+          data: monthlyRevenueData,
+        },
+        orders: {
+          labels: dayLabels,
+          data: weeklyOrdersData,
+        },
+        categories: categoryPercentages,
+      },
+    };
+  }
 }
