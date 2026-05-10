@@ -43,6 +43,7 @@ export class AuthService {
         role: user.role,
         phone: user.phone,
         restaurantId: user.restaurantId,
+        restaurant: user.restaurant, // Inclure les données du restaurant (avec le logo)
       },
     };
   }

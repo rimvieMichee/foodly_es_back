@@ -150,34 +150,41 @@ export class OrdersService {
 
     // Envoyer une notification au serveur
     if (updatedOrder.server?.fcmToken) {
-      try {
-        if (status === 'IN_PREPARATION') {
-          await this.notificationsService.sendToDevice(
-            updatedOrder.server.fcmToken,
-            '👨‍🍳 Commande en préparation',
-            `Table ${updatedOrder.tableNumber} - Votre commande est en cours de préparation`,
-            {
-              type: 'ORDER_STATUS_UPDATE',
-              orderId: updatedOrder.id,
-              tableNumber: updatedOrder.tableNumber,
-              status: 'IN_PREPARATION',
-            },
-          );
-        } else if (status === 'READY') {
-          await this.notificationsService.sendToDevice(
-            updatedOrder.server.fcmToken,
-            '✅ Commande prête',
-            `Table ${updatedOrder.tableNumber} - La commande est prête à être servie`,
-            {
-              type: 'ORDER_STATUS_UPDATE',
-              orderId: updatedOrder.id,
-              tableNumber: updatedOrder.tableNumber,
-              status: 'READY',
-            },
-          );
-        }
-      } catch (error) {
-        console.error('Erreur lors de l\'envoi de la notification:', error);
+      let notificationResult;
+      
+      if (status === 'IN_PREPARATION') {
+        notificationResult = await this.notificationsService.sendToDevice(
+          updatedOrder.server.fcmToken,
+          '👨‍🍳 Commande en préparation',
+          `Table ${updatedOrder.tableNumber} - Votre commande est en cours de préparation`,
+          {
+            type: 'ORDER_STATUS_UPDATE',
+            orderId: updatedOrder.id,
+            tableNumber: updatedOrder.tableNumber,
+            status: 'IN_PREPARATION',
+          },
+        );
+      } else if (status === 'READY') {
+        notificationResult = await this.notificationsService.sendToDevice(
+          updatedOrder.server.fcmToken,
+          '✅ Commande prête',
+          `Table ${updatedOrder.tableNumber} - La commande est prête à être servie`,
+          {
+            type: 'ORDER_STATUS_UPDATE',
+            orderId: updatedOrder.id,
+            tableNumber: updatedOrder.tableNumber,
+            status: 'READY',
+          },
+        );
+      }
+
+      // Si le token est invalide, le supprimer de la base de données
+      if (notificationResult?.invalidToken) {
+        console.log(`🗑️  Removing invalid FCM token for user ${updatedOrder.server.id}`);
+        await this.prisma.user.update({
+          where: { id: updatedOrder.server.id },
+          data: { fcmToken: null },
+        });
       }
     }
 

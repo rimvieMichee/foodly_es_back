@@ -13,6 +13,7 @@ import { UploadModule } from './upload/upload.module';
 import { DailyMenusModule } from './daily-menus/daily-menus.module';
 import { AppController } from './app.controller';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     UploadModule,
     DailyMenusModule,
     NotificationsModule,
+    AnnouncementsModule,
   ],
   controllers: [AppController],
 })

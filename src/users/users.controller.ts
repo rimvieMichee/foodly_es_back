@@ -28,9 +28,14 @@ export class UsersController {
     @Query('role') role?: string,
   ) {
     const restaurantId = req.user?.restaurantId;
-    if (!restaurantId) {
-      throw new Error('restaurantId is missing from JWT token');
+    const userRole = req.user?.role;
+    
+    // Si l'utilisateur est TECHNICIAN, il peut voir tous les utilisateurs
+    // Sinon, il ne voit que les utilisateurs de son restaurant
+    if (userRole !== 'TECHNICIAN' && !restaurantId) {
+      throw new Error('restaurantId is missing from JWT token. Please log in again.');
     }
+    
     return this.usersService.findAll(role, restaurantId);
   }
 

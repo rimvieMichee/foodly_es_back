@@ -89,6 +89,17 @@ export class UsersService {
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
+      include: {
+        restaurant: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+            city: true,
+            phone: true,
+          },
+        },
+      },
     });
   }
 

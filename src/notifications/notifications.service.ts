@@ -6,7 +6,16 @@ export class NotificationsService implements OnModuleInit {
   private messaging: admin.messaging.Messaging;
 
   onModuleInit() {
-    // Initialize Firebase Admin SDK
+    // Initialize Firebase Admin SDK only if credentials are provided
+    const hasFirebaseConfig = process.env.FIREBASE_PROJECT_ID && 
+                               process.env.FIREBASE_CLIENT_EMAIL && 
+                               process.env.FIREBASE_PRIVATE_KEY;
+
+    if (!hasFirebaseConfig) {
+      console.warn('⚠️  Firebase credentials not configured. Notifications service will be disabled.');
+      return;
+    }
+
     if (!admin.apps.length) {
       admin.initializeApp({
         credential: admin.credential.cert({
@@ -17,12 +26,18 @@ export class NotificationsService implements OnModuleInit {
       });
     }
     this.messaging = admin.messaging();
+    console.log('✅ Firebase Admin SDK initialized successfully');
   }
 
   /**
    * Envoyer une notification à un token FCM spécifique
    */
   async sendToDevice(token: string, title: string, body: string, data?: any) {
+    if (!this.messaging) {
+      console.warn('⚠️  Firebase not configured. Notification not sent.');
+      return { success: false, error: 'Firebase not configured', invalidToken: false };
+    }
+
     try {
       const message: admin.messaging.Message = {
         notification: {
@@ -35,10 +50,18 @@ export class NotificationsService implements OnModuleInit {
 
       const response = await this.messaging.send(message);
       console.log('✅ Notification sent successfully:', response);
-      return { success: true, messageId: response };
+      return { success: true, messageId: response, invalidToken: false };
     } catch (error) {
+      // Gérer les tokens invalides ou non enregistrés
+      if (error.code === 'messaging/registration-token-not-registered' || 
+          error.code === 'messaging/invalid-registration-token') {
+        console.warn('⚠️  Invalid or unregistered FCM token. Token should be removed from database.');
+        return { success: false, error: error.message, invalidToken: true };
+      }
+      
+      // Pour les autres erreurs, logger et retourner
       console.error('❌ Error sending notification:', error);
-      throw error;
+      return { success: false, error: error.message, invalidToken: false };
     }
   }
 
@@ -51,6 +74,11 @@ export class NotificationsService implements OnModuleInit {
     body: string,
     data?: any,
   ) {
+    if (!this.messaging) {
+      console.warn('⚠️  Firebase not configured. Notifications not sent.');
+      return { success: false, error: 'Firebase not configured' };
+    }
+
     try {
       const message: admin.messaging.MulticastMessage = {
         notification: {
