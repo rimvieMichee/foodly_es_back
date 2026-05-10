@@ -14,6 +14,7 @@ import { DailyMenusModule } from './daily-menus/daily-menus.module';
 import { AppController } from './app.controller';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
+import { PublicModule } from './public/public.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AnnouncementsModule } from './announcements/announcements.module';
     DailyMenusModule,
     NotificationsModule,
     AnnouncementsModule,
+    PublicModule,
   ],
   controllers: [AppController],
 })

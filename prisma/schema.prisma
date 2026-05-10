@@ -119,25 +119,27 @@ model Table {
 }
 
 model Order {
-  id          String      @id @default(uuid())
-  restaurantId String
-  tableId     String
-  tableNumber String
-  serverId    String
-  serverName  String
-  status      OrderStatus @default(PENDING)
-  totalAmount Float
-  notes       String?
-  createdAt   DateTime    @default(now())
-  readyAt     DateTime?
-  deliveredAt DateTime?
-  updatedAt   DateTime    @updatedAt
-  
+  id              String      @id @default(uuid())
+  restaurantId    String
+  tableId         String
+  tableNumber     String
+  serverId        String?
+  serverName      String?
+  clientName      String?
+  clientFcmToken  String?
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  notes           String?
+  createdAt       DateTime    @default(now())
+  readyAt         DateTime?
+  deliveredAt     DateTime?
+  updatedAt       DateTime    @updatedAt
+
   restaurant Restaurant  @relation(fields: [restaurantId], references: [id])
   table      Table       @relation(fields: [tableId], references: [id])
-  server     User        @relation("ServerOrders", fields: [serverId], references: [id])
+  server     User?       @relation("ServerOrders", fields: [serverId], references: [id])
   items      OrderItem[]
-  
+
   @@map("orders")
 }
 

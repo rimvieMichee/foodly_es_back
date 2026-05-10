@@ -118,7 +118,7 @@ export class OrdersService {
   }
 
   async updateStatus(id: string, status: string) {
-    const order = await this.findOne(id);
+    await this.findOne(id);
 
     const updateData: any = { status };
 
@@ -148,45 +148,58 @@ export class OrdersService {
       },
     });
 
-    // Envoyer une notification au serveur
+    // Notifier le serveur via FCM
     if (updatedOrder.server?.fcmToken) {
-      let notificationResult;
-      
+      let notificationResult: { success: boolean; invalidToken?: boolean } | undefined;
+
       if (status === 'IN_PREPARATION') {
         notificationResult = await this.notificationsService.sendToDevice(
           updatedOrder.server.fcmToken,
           '👨‍🍳 Commande en préparation',
           `Table ${updatedOrder.tableNumber} - Votre commande est en cours de préparation`,
-          {
-            type: 'ORDER_STATUS_UPDATE',
-            orderId: updatedOrder.id,
-            tableNumber: updatedOrder.tableNumber,
-            status: 'IN_PREPARATION',
-          },
+          { type: 'ORDER_STATUS_UPDATE', orderId: updatedOrder.id, tableNumber: updatedOrder.tableNumber, status },
         );
       } else if (status === 'READY') {
         notificationResult = await this.notificationsService.sendToDevice(
           updatedOrder.server.fcmToken,
           '✅ Commande prête',
           `Table ${updatedOrder.tableNumber} - La commande est prête à être servie`,
-          {
-            type: 'ORDER_STATUS_UPDATE',
-            orderId: updatedOrder.id,
-            tableNumber: updatedOrder.tableNumber,
-            status: 'READY',
-          },
+          { type: 'ORDER_STATUS_UPDATE', orderId: updatedOrder.id, tableNumber: updatedOrder.tableNumber, status },
         );
       }
 
-      // Si le token est invalide, le supprimer de la base de données
       if (notificationResult?.invalidToken) {
-        console.log(`🗑️  Removing invalid FCM token for user ${updatedOrder.server.id}`);
         await this.prisma.user.update({
           where: { id: updatedOrder.server.id },
           data: { fcmToken: null },
         });
       }
     }
+
+    // Notifier le client via FCM si la commande vient du QR code
+    if ((updatedOrder as any).clientFcmToken && (status === 'IN_PREPARATION' || status === 'READY')) {
+      const clientTitle = status === 'IN_PREPARATION'
+        ? '👨‍🍳 Commande en préparation'
+        : '✅ Votre commande est prête !';
+      const clientBody = status === 'IN_PREPARATION'
+        ? 'Votre commande est en cours de préparation, encore un peu de patience...'
+        : 'Votre commande est prête ! Le serveur va vous l\'apporter.';
+
+      await this.notificationsService.sendToDevice(
+        (updatedOrder as any).clientFcmToken,
+        clientTitle,
+        clientBody,
+        { type: 'ORDER_STATUS_UPDATE', orderId: updatedOrder.id, status },
+      );
+    }
+
+    // Émettre l'événement WebSocket pour le suivi en temps réel côté client
+    this.notificationsGateway.notifyOrderStatusUpdate({
+      orderId: updatedOrder.id,
+      status: updatedOrder.status,
+      tableNumber: updatedOrder.tableNumber,
+      clientName: (updatedOrder as any).clientName ?? null,
+    });
 
     return updatedOrder;
   }
