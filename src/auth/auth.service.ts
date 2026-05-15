@@ -12,26 +12,31 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersService.findByEmail(email);
+  async validateUser(identifier: string, password: string): Promise<any> {
+    let user: any = null;
+    if (identifier.includes('@')) {
+      user = await this.usersService.findByEmail(identifier);
+    } else {
+      user = await this.usersService.findByPhone(identifier);
+    }
     if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user;
+      const { password: _, ...result } = user;
       return result;
     }
     return null;
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.validateUser(loginDto.email, loginDto.password);
+    const user = await this.validateUser(loginDto.identifier, loginDto.password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { 
-      email: user.email, 
-      sub: user.id, 
+    const payload = {
+      email: user.email,
+      sub: user.id,
       role: user.role,
-      restaurantId: user.restaurantId 
+      restaurantId: user.restaurantId,
     };
     return {
       access_token: this.jwtService.sign(payload),
@@ -43,7 +48,7 @@ export class AuthService {
         role: user.role,
         phone: user.phone,
         restaurantId: user.restaurantId,
-        restaurant: user.restaurant, // Inclure les données du restaurant (avec le logo)
+        restaurant: user.restaurant,
       },
     };
   }

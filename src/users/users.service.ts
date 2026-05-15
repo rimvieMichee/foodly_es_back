@@ -103,6 +103,23 @@ export class UsersService {
     });
   }
 
+  async findByPhone(phone: string) {
+    return this.prisma.user.findFirst({
+      where: { phone },
+      include: {
+        restaurant: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+            city: true,
+            phone: true,
+          },
+        },
+      },
+    });
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto) {
     await this.findOne(id);
 
