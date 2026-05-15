@@ -43,8 +43,24 @@ export class RestaurantsController {
   }
 
   @Get(':id/stats')
-  getRestaurantStats(@Param('id') id: string) {
-    return this.restaurantsService.getRestaurantStats(id);
+  getRestaurantStats(
+    @Param('id') id: string,
+    @Query('year') year?: string,
+    @Query('weekOffset') weekOffset?: string,
+  ) {
+    return this.restaurantsService.getRestaurantStats(
+      id,
+      year ? parseInt(year, 10) : undefined,
+      weekOffset ? parseInt(weekOffset, 10) : undefined,
+    );
+  }
+
+  @Get(':id/analytics')
+  getAnalytics(
+    @Param('id') id: string,
+    @Query('period') period?: string,
+  ) {
+    return this.restaurantsService.getAnalytics(id, (period as any) ?? 'week');
   }
 
   @Patch(':id')

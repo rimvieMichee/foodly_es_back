@@ -163,7 +163,7 @@ export class RestaurantsService {
     };
   }
 
-  async getRestaurantStats(restaurantId: string) {
+  async getRestaurantStats(restaurantId: string, year?: number, weekOffset?: number) {
     // Vérifier que le restaurant existe
     const restaurant = await this.prisma.restaurant.findUnique({
       where: { id: restaurantId },
@@ -174,9 +174,12 @@ export class RestaurantsService {
     }
 
     const now = new Date();
+    const targetYear = year ?? now.getFullYear();
+    const offset = weekOffset ?? 0;
+
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const startOfYear = new Date(targetYear, 0, 1);
 
     // Calculer les statistiques quotidiennes
     const dailyOrders = await this.prisma.order.findMany({
@@ -214,13 +217,13 @@ export class RestaurantsService {
 
     const yearlyRevenue = yearlyOrders.reduce((sum, order) => sum + order.totalAmount, 0);
 
-    // Calculer les revenus par mois pour le graphique (12 derniers mois)
+    // Calculer les revenus par mois pour le graphique (année sélectionnée)
     const monthlyRevenueData = [];
     const monthLabels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-    
+
     for (let i = 0; i < 12; i++) {
-      const monthStart = new Date(now.getFullYear(), i, 1);
-      const monthEnd = new Date(now.getFullYear(), i + 1, 0, 23, 59, 59);
+      const monthStart = new Date(targetYear, i, 1);
+      const monthEnd = new Date(targetYear, i + 1, 0, 23, 59, 59);
       
       const orders = await this.prisma.order.findMany({
         where: {
@@ -242,7 +245,7 @@ export class RestaurantsService {
     const jsDay = now.getDay(); // 0=Dim, 1=Lun…
     const daysToMonday = jsDay === 0 ? -6 : 1 - jsDay;
     const monday = new Date(now);
-    monday.setDate(now.getDate() + daysToMonday);
+    monday.setDate(now.getDate() + daysToMonday + offset * 7);
     monday.setHours(0, 0, 0, 0);
 
     for (let i = 0; i < 7; i++) {
@@ -357,5 +360,94 @@ export class RestaurantsService {
         createdAt: order.createdAt,
       })),
     };
+  }
+
+  async getAnalytics(restaurantId: string, period: 'day' | 'week' | 'month') {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+
+    if (period === 'day') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      endDate   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    } else if (period === 'month') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      endDate   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    } else {
+      // week : lundi → dimanche de la semaine courante
+      const jsDay = now.getDay();
+      const daysToMonday = jsDay === 0 ? -6 : 1 - jsDay;
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() + daysToMonday);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+      endDate.setHours(23, 59, 59, 999);
+    }
+
+    // Agrégation des articles commandés sur la période
+    const items = await this.prisma.orderItem.findMany({
+      where: { order: { restaurantId, createdAt: { gte: startDate, lte: endDate } } },
+      include: { menuItem: true },
+    });
+
+    const grouped: Record<string, { name: string; category: string; count: number; amount: number }> = {};
+    for (const item of items) {
+      const key = item.menuItemId;
+      if (!grouped[key]) {
+        grouped[key] = {
+          name: item.menuItem?.name ?? 'Inconnu',
+          category: item.menuItem?.category ?? 'Autre',
+          count: 0,
+          amount: 0,
+        };
+      }
+      grouped[key].count  += item.quantity;
+      grouped[key].amount += item.price * item.quantity;
+    }
+
+    const topItems = Object.values(grouped)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // Ventilation par jour (pour toutes les périodes)
+    const dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+    const jsDay = now.getDay();
+    const daysToMonday = jsDay === 0 ? -6 : 1 - jsDay;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + daysToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const dailyBreakdown = [];
+    for (let i = 0; i < 7; i++) {
+      const dayStart = new Date(monday);
+      dayStart.setDate(monday.getDate() + i);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const dayItems = await this.prisma.orderItem.findMany({
+        where: { order: { restaurantId, createdAt: { gte: dayStart, lte: dayEnd } } },
+        include: { menuItem: true },
+      });
+
+      const dayGrouped: Record<string, { name: string; category: string; count: number }> = {};
+      for (const item of dayItems) {
+        const key = item.menuItemId;
+        if (!dayGrouped[key]) {
+          dayGrouped[key] = { name: item.menuItem?.name ?? 'Inconnu', category: item.menuItem?.category ?? 'Autre', count: 0 };
+        }
+        dayGrouped[key].count += item.quantity;
+      }
+
+      const sorted = Object.values(dayGrouped).sort((a, b) => b.count - a.count);
+      dailyBreakdown.push({
+        day: dayLabels[i],
+        date: dayStart.toISOString().split('T')[0],
+        topItems: sorted.slice(0, 3),
+      });
+    }
+
+    return { period, topItems, dailyBreakdown };
   }
 }
