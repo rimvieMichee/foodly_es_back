@@ -450,4 +450,92 @@ export class RestaurantsService {
 
     return { period, topItems, dailyBreakdown };
   }
+
+  async getHistory(
+    restaurantId: string,
+    options: { startDate?: string; endDate?: string; dayOfWeek?: number[]; search?: string },
+  ) {
+    const { startDate, endDate, dayOfWeek, search } = options;
+
+    const start = startDate
+      ? new Date(startDate + 'T00:00:00')
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate + 'T23:59:59') : new Date();
+
+    const orders = await this.prisma.order.findMany({
+      where: {
+        restaurantId,
+        createdAt: { gte: start, lte: end },
+        ...(search
+          ? { items: { some: { menuItem: { name: { contains: search, mode: 'insensitive' } } } } }
+          : {}),
+      },
+      include: { items: { include: { menuItem: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+
+    type DayEntry = {
+      date: string;
+      dayName: string;
+      jsDay: number;
+      orderCount: number;
+      totalAmount: number;
+      rawOrders: typeof orders;
+    };
+
+    const byDate: Record<string, DayEntry> = {};
+
+    for (const order of orders) {
+      const d = order.createdAt;
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const jsDay = d.getDay();
+
+      if (dayOfWeek?.length && !dayOfWeek.includes(jsDay)) continue;
+
+      if (!byDate[dateKey]) {
+        byDate[dateKey] = { date: dateKey, dayName: dayNames[jsDay], jsDay, orderCount: 0, totalAmount: 0, rawOrders: [] };
+      }
+      byDate[dateKey].rawOrders.push(order);
+      byDate[dateKey].totalAmount += order.totalAmount;
+      byDate[dateKey].orderCount++;
+    }
+
+    const days = Object.values(byDate)
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .map(day => {
+        const itemAgg: Record<string, { name: string; category: string; quantity: number; amount: number }> = {};
+        for (const order of day.rawOrders) {
+          for (const item of order.items) {
+            const key = item.menuItemId;
+            if (!itemAgg[key]) {
+              itemAgg[key] = { name: item.menuItem?.name ?? 'Inconnu', category: item.menuItem?.category ?? 'Autre', quantity: 0, amount: 0 };
+            }
+            itemAgg[key].quantity += item.quantity;
+            itemAgg[key].amount += item.price * item.quantity;
+          }
+        }
+        return {
+          date: day.date,
+          dayName: day.dayName,
+          orderCount: day.orderCount,
+          totalAmount: day.totalAmount,
+          items: Object.values(itemAgg).sort((a, b) => b.quantity - a.quantity),
+        };
+      });
+
+    const totalOrders  = days.reduce((s, d) => s + d.orderCount, 0);
+    const totalRevenue = days.reduce((s, d) => s + d.totalAmount, 0);
+
+    return {
+      summary: {
+        totalDays: days.length,
+        totalOrders,
+        totalRevenue,
+        avgOrdersPerDay: days.length ? Math.round((totalOrders / days.length) * 10) / 10 : 0,
+      },
+      days,
+    };
+  }
 }

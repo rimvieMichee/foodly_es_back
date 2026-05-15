@@ -63,6 +63,20 @@ export class RestaurantsController {
     return this.restaurantsService.getAnalytics(id, (period as any) ?? 'week');
   }
 
+  @Get(':id/history')
+  getHistory(
+    @Param('id') id: string,
+    @Query('startDate')  startDate?: string,
+    @Query('endDate')    endDate?: string,
+    @Query('dayOfWeek')  dayOfWeek?: string,
+    @Query('search')     search?: string,
+  ) {
+    const days = dayOfWeek
+      ? dayOfWeek.split(',').map(Number).filter(n => !isNaN(n))
+      : [];
+    return this.restaurantsService.getHistory(id, { startDate, endDate, dayOfWeek: days, search });
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateRestaurantDto: UpdateRestaurantDto) {
     return this.restaurantsService.update(id, updateRestaurantDto);
