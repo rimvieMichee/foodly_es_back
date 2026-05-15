@@ -234,27 +234,44 @@ export class RestaurantsService {
       monthlyRevenueData.push(revenue);
     }
 
-    // Calculer les commandes par jour de la semaine (7 derniers jours)
+    // Calculer les commandes par jour de la semaine courante (Lun → Dim)
     const weeklyOrdersData = [];
     const dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-    
-    for (let i = 6; i >= 0; i--) {
-      const dayStart = new Date(now);
-      dayStart.setDate(now.getDate() - i);
+
+    const jsDay = now.getDay(); // 0=Dim, 1=Lun…
+    const daysToMonday = jsDay === 0 ? -6 : 1 - jsDay;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + daysToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < 7; i++) {
+      const dayStart = new Date(monday);
+      dayStart.setDate(monday.getDate() + i);
       dayStart.setHours(0, 0, 0, 0);
-      
+
       const dayEnd = new Date(dayStart);
       dayEnd.setHours(23, 59, 59, 999);
-      
+
       const count = await this.prisma.order.count({
         where: {
           restaurantId,
           createdAt: { gte: dayStart, lte: dayEnd },
         },
       });
-      
+
       weeklyOrdersData.push(count);
     }
+
+    // Récupérer les 5 dernières commandes pour l'activité récente
+    const recentOrders = await this.prisma.order.findMany({
+      where: { restaurantId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      include: {
+        table: true,
+        items: { include: { menuItem: true } },
+      },
+    });
 
     // Calculer la répartition par catégorie
     const orderItems = await this.prisma.orderItem.findMany({
@@ -329,6 +346,12 @@ export class RestaurantsService {
         },
         categories: categoryPercentages,
       },
+      recentActivity: recentOrders.map((order) => ({
+        id: order.id,
+        title: `Commande table ${order.table?.number ?? '?'} — ${order.items.length} article(s)`,
+        status: order.status,
+        createdAt: order.createdAt,
+      })),
     };
   }
 }
