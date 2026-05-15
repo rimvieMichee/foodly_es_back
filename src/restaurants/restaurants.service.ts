@@ -236,6 +236,7 @@ export class RestaurantsService {
 
     // Calculer les commandes par jour de la semaine courante (Lun → Dim)
     const weeklyOrdersData = [];
+    const weeklyAmountsData = [];
     const dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
     const jsDay = now.getDay(); // 0=Dim, 1=Lun…
@@ -252,14 +253,16 @@ export class RestaurantsService {
       const dayEnd = new Date(dayStart);
       dayEnd.setHours(23, 59, 59, 999);
 
-      const count = await this.prisma.order.count({
+      const dayOrders = await this.prisma.order.findMany({
         where: {
           restaurantId,
           createdAt: { gte: dayStart, lte: dayEnd },
         },
+        select: { totalAmount: true },
       });
 
-      weeklyOrdersData.push(count);
+      weeklyOrdersData.push(dayOrders.length);
+      weeklyAmountsData.push(dayOrders.reduce((sum, o) => sum + o.totalAmount, 0));
     }
 
     // Récupérer les 5 dernières commandes pour l'activité récente
@@ -343,6 +346,7 @@ export class RestaurantsService {
         orders: {
           labels: dayLabels,
           data: weeklyOrdersData,
+          amounts: weeklyAmountsData,
         },
         categories: categoryPercentages,
       },
