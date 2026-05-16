@@ -126,6 +126,7 @@ model Order {
   serverId        String?
   serverName      String?
   clientName      String?
+  clientPhone     String?
   clientFcmToken  String?
   status          OrderStatus @default(PENDING)
   totalAmount     Float

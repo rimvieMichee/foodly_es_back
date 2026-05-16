@@ -13,8 +13,26 @@ export class OrdersService {
     private notificationsGateway: NotificationsGateway,
   ) {}
 
+  private async resolveOrderItems(items: { menuItemId: string; quantity: number; price: number; comment?: string }[]) {
+    const resolved: { menuItemId: string; quantity: number; price: number; comment?: string }[] = [];
+    for (const item of items) {
+      const dailyMenu = await this.prisma.dailyMenu.findUnique({ where: { id: item.menuItemId } });
+      if (dailyMenu && dailyMenu.menuItemIds.length > 0) {
+        const pricePerItem = item.price / dailyMenu.menuItemIds.length;
+        for (const menuItemId of dailyMenu.menuItemIds) {
+          resolved.push({ menuItemId, quantity: item.quantity, price: pricePerItem, comment: item.comment });
+        }
+      } else {
+        resolved.push(item);
+      }
+    }
+    return resolved;
+  }
+
   async create(createOrderDto: CreateOrderDto) {
     const { items, specialInstructions, ...orderData } = createOrderDto;
+
+    const resolvedItems = await this.resolveOrderItems(items);
 
     const order = await this.prisma.order.create({
       data: {
@@ -22,7 +40,7 @@ export class OrdersService {
         // Mapper specialInstructions vers notes pour compatibilité
         notes: specialInstructions || orderData.notes,
         items: {
-          create: items.map((item) => ({
+          create: resolvedItems.map((item) => ({
             menuItemId: item.menuItemId,
             quantity: item.quantity,
             price: item.price,

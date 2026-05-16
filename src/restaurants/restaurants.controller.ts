@@ -77,6 +77,26 @@ export class RestaurantsController {
     return this.restaurantsService.getHistory(id, { startDate, endDate, dayOfWeek: days, search });
   }
 
+  @Get(':id/clients')
+  searchClients(
+    @Param('id') id: string,
+    @Query('search') search?: string,
+  ) {
+    return this.restaurantsService.searchClients(id, search ?? '');
+  }
+
+  @Get(':id/loyalty')
+  getLoyalty(
+    @Param('id') id: string,
+    @Query('period') period?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.restaurantsService.getLoyalty(id, {
+      period: (period as any) ?? 'month',
+      search,
+    });
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateRestaurantDto: UpdateRestaurantDto) {
     return this.restaurantsService.update(id, updateRestaurantDto);

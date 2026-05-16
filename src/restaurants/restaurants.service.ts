@@ -111,6 +111,102 @@ export class RestaurantsService {
     return restaurant;
   }
 
+  async searchClients(restaurantId: string, search: string) {
+    const orders = await this.prisma.order.findMany({
+      where: {
+        restaurantId,
+        clientPhone: { not: null },
+        ...(search.trim()
+          ? {
+              OR: [
+                { clientPhone: { contains: search, mode: 'insensitive' } },
+                { clientName:  { contains: search, mode: 'insensitive' } },
+              ],
+            }
+          : {}),
+        status: { not: 'CANCELLED' },
+      },
+      select: { clientPhone: true, clientName: true },
+      distinct: ['clientPhone'],
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+    });
+    return orders.map((o) => ({ phone: o.clientPhone, name: o.clientName }));
+  }
+
+  async getLoyalty(restaurantId: string, params: {
+    period?: 'week' | 'month' | 'year';
+    search?: string;
+  }) {
+    const { period = 'month', search } = params;
+
+    const now = new Date();
+    let since: Date;
+    if (period === 'week') {
+      since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (period === 'year') {
+      since = new Date(now.getFullYear(), 0, 1);
+    } else {
+      since = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+
+    const orders = await this.prisma.order.findMany({
+      where: {
+        restaurantId,
+        clientPhone: search
+          ? { contains: search }
+          : { not: null },
+        createdAt: { gte: since },
+        status: { not: 'CANCELLED' },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Grouper par numéro de téléphone
+    const clientMap = new Map<string, {
+      phone: string;
+      name: string | null;
+      totalOrders: number;
+      totalSpent: number;
+      firstVisit: Date;
+      lastVisit: Date;
+      orders: typeof orders;
+    }>();
+
+    for (const order of orders) {
+      const phone = order.clientPhone!;
+      if (!clientMap.has(phone)) {
+        clientMap.set(phone, {
+          phone,
+          name: order.clientName,
+          totalOrders: 0,
+          totalSpent: 0,
+          firstVisit: order.createdAt,
+          lastVisit: order.createdAt,
+          orders: [],
+        });
+      }
+      const client = clientMap.get(phone)!;
+      client.totalOrders += 1;
+      client.totalSpent += order.totalAmount;
+      client.orders.push(order);
+      if (order.createdAt < client.firstVisit) client.firstVisit = order.createdAt;
+      if (order.createdAt > client.lastVisit) client.lastVisit = order.createdAt;
+    }
+
+    const clients = Array.from(clientMap.values()).sort(
+      (a, b) => b.totalSpent - a.totalSpent,
+    );
+
+    return {
+      period,
+      since,
+      totalClients: clients.length,
+      totalRevenue: clients.reduce((s, c) => s + c.totalSpent, 0),
+      clients,
+    };
+  }
+
   async update(id: string, updateRestaurantDto: UpdateRestaurantDto) {
     await this.findOne(id);
 

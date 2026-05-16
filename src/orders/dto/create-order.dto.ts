@@ -64,6 +64,11 @@ export class CreateOrderDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
+  clientPhone?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
   notes?: string;
 
   @ApiProperty({ required: false })
