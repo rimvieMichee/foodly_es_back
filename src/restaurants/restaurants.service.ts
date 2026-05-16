@@ -135,7 +135,7 @@ export class RestaurantsService {
   }
 
   async getLoyalty(restaurantId: string, params: {
-    period?: 'week' | 'month' | 'year';
+    period?: 'week' | 'month' | 'quarter' | 'semester' | 'year';
     search?: string;
   }) {
     const { period = 'month', search } = params;
@@ -144,6 +144,10 @@ export class RestaurantsService {
     let since: Date;
     if (period === 'week') {
       since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (period === 'quarter') {
+      since = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    } else if (period === 'semester') {
+      since = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
     } else if (period === 'year') {
       since = new Date(now.getFullYear(), 0, 1);
     } else {
